@@ -30,14 +30,14 @@ class Dashboard extends Component {
     this.props.getAllEmployeesStatus();
   }
 
-  componentWillUnmount() {
-    const values = {
-      email: this.props.auth.email,
-      name: this.props.auth.name,
-      status: this.state.currentStatus
-    };
-    this.props.updateStatus(values);
-  }
+  // componentWillUnmount() {
+  //   const values = {
+  //     email: this.props.auth.email,
+  //     name: this.props.auth.name,
+  //     status: this.state.currentStatus
+  //   };
+  //   this.props.updateStatus(values);
+  // }
 
   onSelectFieldChange(e) {
     const values = {

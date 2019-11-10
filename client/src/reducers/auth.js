@@ -34,6 +34,8 @@ export default function(state = initialState, action) {
     case UPDATE_STATUS:
       console.log(payload);
       localStorage.setItem('token', payload.token);
+      localStorage.setItem('name', payload.name);
+      localStorage.setItem('email', payload.email);
       return {
         ...state,
         ...payload,
