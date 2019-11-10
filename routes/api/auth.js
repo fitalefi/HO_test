@@ -20,17 +20,14 @@ router.get('/', auth, async (req, res) => {
 // Authenticate user and get token
 router.post(
   '/',
-  [
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password is required').exists()
-  ],
+  [check('email', 'Please include a valid email').isEmail()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     try {
       let user = await User.findOne({ email });
@@ -41,24 +38,22 @@ router.post(
           .json({ errors: [{ msg: 'Invalid Credentials' }] });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: 'Invalid Credentials' }] });
-      }
-
       // Return jsonwebtoken
 
       const payload = {
         user: {
-          id: user.id,
-          name: user.name
+          email: user.email,
+          id: user.id
         }
       };
       jwt.sign(payload, config.get('jwtSecret'), (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({
+          token: token,
+          email: email,
+          name: user.name,
+          status: user.status
+        });
       });
     } catch (err) {
       console.error(err.message);

@@ -33,16 +33,12 @@ router.post('/', [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    console.log('the req.body in post profile is');
-    console.log(req.body);
-    console.log(req.user);
 
     const profileFields = {
       user: req.user.id,
       status: req.body.status,
       name: req.user.name
     };
-    console.log(profileFields);
 
     try {
       let profile = await Profile.findOne({ user: req.user.id });
@@ -68,6 +64,7 @@ router.post('/', [
   }
 ]);
 
+// get all profiles
 router.get('/', auth, async (req, res) => {
   try {
     const profiles = await Profile.find();
@@ -78,6 +75,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// get profile by user id
 router.get('/user/:user_id', async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.params.user_id });
@@ -103,6 +101,11 @@ router.delete('/', auth, async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
+});
+
+router.get('/fetchStatusToDisplay', (req, res) => {
+  const statues = ['Working', 'OnVacation', 'LunchTime', 'BusinessTrip'];
+  res.send({ data: statues });
 });
 
 module.exports = router;

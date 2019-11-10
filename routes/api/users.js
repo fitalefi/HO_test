@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const config = require('config');
+const auth = require('../../middleware/auth');
 
 const User = require('../../models/User');
 
@@ -14,11 +15,7 @@ router.post(
     check('name', 'Name is required')
       .not()
       .isEmpty(),
-    check('email', 'Please include a valid email').isEmail(),
-    check(
-      'password',
-      'Please enter a password with 6 or more characters'
-    ).isLength({ min: 6 })
+    check('email', 'Please include a valid email').isEmail()
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -26,8 +23,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
-
+    const { name, email } = req.body;
     try {
       let user = await User.findOne({ email });
 
@@ -39,13 +35,8 @@ router.post(
 
       user = new User({
         name,
-        email,
-        password
+        email
       });
-      // Encrypt password
-      const salt = await bcrypt.genSalt(10);
-
-      user.password = await bcrypt.hash(password, salt);
 
       await user.save();
 
@@ -53,13 +44,18 @@ router.post(
 
       const payload = {
         user: {
-          id: user.id,
-          name: user.name
+          email: user.email,
+          id: user.id
         }
       };
       jwt.sign(payload, config.get('jwtSecret'), (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({
+          token: token,
+          email: email,
+          name: name,
+          status: user.status
+        });
       });
     } catch (err) {
       console.error(err.message);
@@ -67,5 +63,47 @@ router.post(
     }
   }
 );
+
+router.post('/updateStatus', auth, async (req, res) => {
+  try {
+    const { email } = req.body;
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ errors: [{ msg: 'User do not exists' }] });
+    }
+    const userFields = {
+      status: req.body.status,
+      name: req.body.name
+    };
+    console.log(userFields);
+    console.log('1');
+    console.log(req.user);
+    user = await User.findOneAndUpdate(
+      { _id: req.user.id },
+      { $set: userFields },
+      { new: true }
+    );
+    console.log('2');
+    console.log(user);
+
+    return res.json(user);
+  } catch (err) {}
+});
+
+// get all profiles
+router.get('/', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+router.get('/statues_to_display', (req, res) => {
+  res.send(['Working', 'OnVacation', 'LunchTime', 'BusinessTrip']);
+});
 
 module.exports = router;

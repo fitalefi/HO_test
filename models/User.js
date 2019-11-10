@@ -10,13 +10,9 @@ const UserScheme = new mongoose.Schema({
     required: true,
     unique: true
   },
-  password: {
+  status: {
     type: String,
-    required: true
-  },
-  date: {
-    type: Date,
-    default: Date.now
+    default: 'Working'
   }
 });
 
